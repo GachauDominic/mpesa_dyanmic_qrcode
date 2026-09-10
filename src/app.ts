@@ -1,0 +1,29 @@
+import express from "express";
+import { authRouter } from "./routes/auth.routes";
+import { qrRouter } from "./routes/qr.routes";
+import { c2bRouter } from "./routes/c2b.routes";
+import { HttpError } from "./lib/errors";
+
+export function createApp() {
+  const app = express();
+  app.use(express.json());
+
+  app.get("/health", (_req, res) => res.json({ ok: true }));
+
+  app.use("/api/auth", authRouter);
+  app.use("/api/qr", qrRouter);
+  // This path is what you register with Daraja as your Validation/Confirmation URLs.
+  app.use("/api/mpesa/c2b", c2bRouter);
+
+  app.use(
+    (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+      if (err instanceof HttpError) {
+        return res.status(err.status).json({ error: err.message });
+      }
+      console.error(err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  );
+
+  return app;
+}

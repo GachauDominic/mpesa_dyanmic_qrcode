@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "tests",
+    "k6",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "src/**/__mocks__/**"
+  ]
+}
