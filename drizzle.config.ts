@@ -3,7 +3,7 @@ import type { Config } from "drizzle-kit";
 
 export default {
   schema: "./src/db/schema.ts",
-  out: "./drizzle/migrations",
+  out:"./src/db/migrations",
   dialect: "postgresql",
   dbCredentials: {
     url: (globalThis as typeof globalThis & {

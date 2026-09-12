@@ -3,7 +3,7 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema"
-export const sql = neon(process.env.Database_URL as string);
+export const sql = neon(process.env.DARAJA_BASE_URL as string);
 const db = drizzle(sql, {schema, logger: true});
 export default db;
 

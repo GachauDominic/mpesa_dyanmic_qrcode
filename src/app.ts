@@ -3,12 +3,25 @@ import { authRouter } from "./routes/auth.routes";
 import { qrRouter } from "./routes/qr.routes";
 import { c2bRouter } from "./routes/c2b.routes";
 import { HttpError } from "./lib/errors";
+import { logger } from "./middleware/logger";
+import rateLimiterMidd from "./middleware/rateLimiter";
+// import cors  from 'cors'
 
 export function createApp() {
   const app = express();
   app.use(express.json());
 
+  // {cors is used to tell the Backend/API what Frontend URL is allowed to access it}
+  // app.use(cors({
+  //   origin: "https://todo-client-2.vercel.app",
+  //   methods: ["GET", "POST", 
+  // "PUT", "DELETE" ],
+  // }))
+
   app.get("/health", (_req, res) => res.json({ ok: true }));
+
+  app.use(logger)
+  app.use(rateLimiterMidd)
 
   app.use("/api/auth", authRouter);
   app.use("/api/qr", qrRouter);
