@@ -21,10 +21,12 @@ export function createApp() {
   app.get("/health", (_req, res) => res.json({ ok: true }));
 
   app.use(logger)
-  app.use(rateLimiterMidd)
 
-  app.use("/api/auth", authRouter);
-  app.use("/api/qr", qrRouter);
+  // Rate limiting only applies to your own auth/QR endpoints — never to
+  // /api/mpesa/c2b below, since those calls come from Safaricom's own
+  // servers on behalf of many different customers, not a single abusive user.
+  app.use("/api/auth", rateLimiterMidd, authRouter);
+  app.use("/api/qr", rateLimiterMidd, qrRouter);
   // This path is what you register with Daraja as your Validation/Confirmation URLs.
   app.use("/api/mpesa/c2b", c2bRouter);
 

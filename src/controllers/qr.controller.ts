@@ -22,7 +22,7 @@ export async function generateQr(req: Request, res: Response, next: NextFunction
 
 export async function getQr(req: Request, res: Response, next: NextFunction) {
   try {
-    const result = await getQrRequestForMerchant(req.params.id, req.user!.merchantId);
+    const result = await getQrRequestForMerchant(String(req.params.id), req.user!.merchantId);
     res.json(result);
   } catch (err) {
     next(err);

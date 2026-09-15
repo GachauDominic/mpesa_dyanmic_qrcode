@@ -6,7 +6,7 @@ import { getDarajaAccessToken } from "../lib/daraja/auth";
 // validation and confirmation webhooks. Run this once after deploying,
 // and again any time those URLs change (e.g. new ngrok tunnel in sandbox).
 async function main() {
-  const shortCode = process.env.DARAJA_SHORTCODE ?? 174379;
+  const shortCode = process.env.DARAJA_SHORTCODE;
   const confirmationUrl = process.env.DARAJA_CONFIRMATION_URL;
   const validationUrl = process.env.DARAJA_VALIDATION_URL;
   const responseType = process.env.DARAJA_RESPONSE_TYPE ?? "Completed";
