@@ -1,0 +1,19 @@
+
+### login a user
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email":"admin@example.com",
+  "password":"changeme123"
+}
+
+### generate a qr-code 
+POST http://localhost:3000/api/qr/generate
+Authorization: Bearer <eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4NTA0OWQwNS0zMzYyLTQxMWUtOGEzNC04MzNjOGUwODMzYjciLCJtZXJjaGFudElkIjoiNjgxZDc5MGYtYzkxNS00NTU1LTk5ZjEtZTA4OGQ2MDNmNTRmIiwicm9sZSI6Ik1FUkNIQU5UX0FETUlOIiwiaWF0IjoxNzg5NTkwNzY5LCJleHAiOjE3ODk2MzM5Njl9.a0o5RPi84gROhH_cLiAK7Hz-0tJaYVC-iBg5aLwz7Gk>
+Content-Type: application/json
+
+{
+  "amount": 10
+}
+

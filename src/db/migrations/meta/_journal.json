@@ -8,6 +8,13 @@
       "when": 1789217343600,
       "tag": "0000_pretty_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789587350818,
+      "tag": "0001_repair_missing_tables",
+      "breakpoints": true
     }
   ]
 }
