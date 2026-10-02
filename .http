@@ -1,5 +1,6 @@
 
 ### login a user
+# @name login
 POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
@@ -8,12 +9,24 @@ Content-Type: application/json
   "password":"changeme123"
 }
 
+###Extract the tokenfrom login response
+@token = {{login.response.body.token}}
+
+
 ### generate a qr-code 
+# @name generateQr
 POST http://localhost:3000/api/qr/generate
-Authorization: Bearer <eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4NTA0OWQwNS0zMzYyLTQxMWUtOGEzNC04MzNjOGUwODMzYjciLCJtZXJjaGFudElkIjoiNjgxZDc5MGYtYzkxNS00NTU1LTk5ZjEtZTA4OGQ2MDNmNTRmIiwicm9sZSI6Ik1FUkNIQU5UX0FETUlOIiwiaWF0IjoxNzg5NTkwNzY5LCJleHAiOjE3ODk2MzM5Njl9.a0o5RPi84gROhH_cLiAK7Hz-0tJaYVC-iBg5aLwz7Gk>
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "amount": 10
+  "amount": 66
 }
 
+###Extract the id from generate qr code response
+@qrId = {{generateQr.response.body.id}}
+
+
+### get qr-code
+GET http://localhost:3000/api/qr/{{qrId}}
+Authorization: Bearer {{token}}
