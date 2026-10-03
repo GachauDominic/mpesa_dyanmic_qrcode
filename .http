@@ -12,6 +12,24 @@ Content-Type: application/json
 ###Extract the tokenfrom login response
 @token = {{login.response.body.token}}
 
+### Insert a merchant
+POST http://localhost:3000/api/merchants
+Content-Type: application/json
+
+{
+  
+}
+
+### Insert channel to a merchant
+POST http://localhost:3000/api/merchants/me/channels
+Content-Type: application/json
+
+{
+  
+}
+
+
+
 
 ### generate a qr-code 
 # @name generateQr

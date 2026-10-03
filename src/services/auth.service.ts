@@ -6,7 +6,10 @@ import { users } from "../db/schema";
 import { env } from "../config/env";
 import { UnauthorizedError, ForbiddenError } from "../lib/errors";
 
-export async function login(email: string, password: string): Promise<{ token: string }> {
+export async function login(
+  email: string,
+  password: string,
+): Promise<{ email: string; token: string }> {
   const [user] = await db.select().from(users).where(eq(users.email, email));
   if (!user) {
     throw new UnauthorizedError("Invalid email or password");
@@ -24,8 +27,8 @@ export async function login(email: string, password: string): Promise<{ token: s
   const token = jwt.sign(
     { userId: user.id, merchantId: user.merchantId, role: user.role },
     env.JWT_SECRET,
-    { expiresIn: "12h" }
+    { expiresIn: "12h" },
   );
 
-  return { token };
+  return { email, token };
 }
