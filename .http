@@ -1,6 +1,18 @@
 
+### register an Admin
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "gachaudominic@gmail.com",
+  "password_hash": "*T89z>O35e=7tm",
+  "role": "SUPER_ADMIN",
+  "first_name": "Dominic",
+  "last_name": "Maina"
+}
+
 ### login a user
-# @name login
+# @name merchantAdminLogin
 POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
@@ -9,32 +21,18 @@ Content-Type: application/json
   "password":"changeme123"
 }
 
-###Extract the tokenfrom login response
-@token = {{login.response.body.token}}
+# {
+#   "email": "gachaudominic@gmail.com",
+#   "password": "*T89z>O35e=7tm",
+# }
 
-### Insert a merchant
-POST http://localhost:3000/api/merchants
-Content-Type: application/json
+###Extract the merchantAdmin token from login response
+@merchantToken = {{merchantAdminLogin.response.body.token}}
 
-{
-  
-}
-
-### Insert channel to a merchant
-POST http://localhost:3000/api/merchants/me/channels
-Content-Type: application/json
-
-{
-  
-}
-
-
-
-
-### generate a qr-code 
+### generate a qr-code with merchantAdmin
 # @name generateQr
 POST http://localhost:3000/api/qr/generate
-Authorization: Bearer {{token}}
+Authorization: Bearer {{merchantToken}}
 Content-Type: application/json
 
 {
@@ -48,3 +46,57 @@ Content-Type: application/json
 ### get qr-code
 GET http://localhost:3000/api/qr/{{qrId}}
 Authorization: Bearer {{token}}
+
+### log in as the super admin
+# @name superAdminLogin
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@example.com",
+  "password": "changeme123"
+}
+
+###Extract the superadmin token from login response
+@superToken = {{superAdminLogin.response.body.token}}
+
+### create a merchant (requires the super admin token)
+POST http://localhost:3000/api/merchants
+Authorization: Bearer {{superToken}}
+Content-Type: application/json
+
+{
+  "businessName": "Dominic's Shop",
+  "channelType": "SEND_MONEY",
+  "cpi": "254704644324"
+}
+
+### Add a channel to a merchant
+POST http://localhost:3000/api/merchants/me/channels
+Content-Type: application/json
+
+{
+  "businessName": "AIRTEL Airtime",
+  "channelType": "PAYBILL",
+  "cpi": "220220",
+  "RefNo": "254735782454"
+
+}
+
+### generate a qr-code with superAdmin
+# @name sp_generateQr
+POST http://localhost:3000/api/qr/generate
+Authorization: Bearer {{superToken}}
+Content-Type: application/json
+
+{
+  "amount": 66
+}
+
+###Extract the superAdmin id from generate qr code response
+@superqrId = {{sp_generateQr.response.body.id}}
+
+### get qr-code
+GET http://localhost:3000/api/qr/{{superqrId}}
+Authorization: Bearer {{superToken}}
+

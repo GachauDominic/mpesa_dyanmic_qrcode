@@ -1,8 +1,33 @@
 import { Request, Response, NextFunction } from "express";
 import { loginSchema } from "../validators/schemas";
-import { login } from "../services/auth.service";
+import { login, registerAdminService } from "../services/auth.service";
+import bcrypt from "bcryptjs";
 
-export async function loginController(req: Request, res: Response, next: NextFunction) {
+// { create admin }
+export const registerAdminController = async (req: Request, res: Response) => {
+  try {
+    const admin = req.body;
+    const passwordHarsh = admin.passwordHarsh;
+    const hashedpassword = await bcrypt.hashSync(passwordHarsh, 10);
+    admin.passwordHarsh = hashedpassword;
+
+    const newAdmin = await registerAdminService(admin);
+    if (!newAdmin)
+      return res.status(401).json({ message: "Admin not created!" });
+    return res
+      .status(201)
+      .json({ message: "admin created successfully", data: newAdmin });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+// { login admin }
+export async function loginController(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {

@@ -1,3 +1,4 @@
+import { varchar } from "drizzle-orm/pg-core";
 import {
   pgTable,
   uuid,
@@ -8,6 +9,7 @@ import {
   pgEnum,
   jsonb,
 } from "drizzle-orm/pg-core";
+import { email } from "zod";
 
 // Maps directly to Daraja's TrxCode values for the channels this project supports.
 // BG = Buy Goods (Till), PB = Paybill, SB = Sent to Business (Pochi la Biashara), SM = Send Money
@@ -25,12 +27,25 @@ export const qrStatusEnum = pgEnum("qr_status", [
   "EXPIRED",
 ]);
 
-export const userRoleEnum = pgEnum("user_role", ["MERCHANT_ADMIN", "SUPER_ADMIN"]);
+export const userRoleEnum = pgEnum("user_role", [
+  "MERCHANT_ADMIN",
+  "SUPER_ADMIN",
+]);
+
+export const admins = pgTable("admins", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  firstName: varchar("first_name", { length: 50 }).notNull(),
+  lastName: varchar("last_name", { length: 50 }).notNull(),
+  email: varchar("email", { length: 100 }).notNull(),
+  passwordHarsh: varchar("password_harsh", { length: 255 }).notNull(),
+  role: text("role").default("SUPER_ADMIN").notNull(),
+});
 
 export const merchants = pgTable("merchants", {
   id: uuid("id").defaultRandom().primaryKey(),
   businessName: text("business_name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  role: text("role").default("MERCHANT_ADMIN").notNull(),
 });
 
 // A merchant can register several channels (Till + Paybill + Pochi, etc).
@@ -41,6 +56,8 @@ export const merchantChannels = pgTable("merchant_channels", {
     .references(() => merchants.id)
     .notNull(),
   channelType: channelTypeEnum("channel_type").notNull(),
+  // MSISDN stands for Mobile Station International Subscriber Directory Number — it's the formal telecom term for a mobile phone number in its full international format.
+  // In the Daraja/M-Pesa context, that specifically means: country code + number, no leading zero, no + sign
   // The Daraja CPI: till number, paybill number, or MSISDN depending on channelType
   cpi: text("cpi").notNull(),
   label: text("label"), // e.g. "Main till", "School fees paybill"
@@ -85,11 +102,9 @@ export const paymentConfirmations = pgTable("payment_confirmations", {
   receivedAt: timestamp("received_at").defaultNow().notNull(),
 });
 
-export const users = pgTable("users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
-  merchantId: uuid("merchant_id").references(() => merchants.id),
-  role: userRoleEnum("role").default("MERCHANT_ADMIN").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+// {inferences}
+export type TIAdmin = typeof admins.$inferInsert;
+export type TSAdmin = typeof admins.$inferSelect;
+
+export type TIMerchant = typeof merchants.$inferInsert;
+export type TSMerchant = typeof merchants.$inferSelect;
