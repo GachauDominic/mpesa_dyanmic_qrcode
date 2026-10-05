@@ -23,7 +23,7 @@ interface GenerateQrResult {
 }
 
 export async function generateQrForMerchant(
-  params: GenerateQrParams
+  params: GenerateQrParams,
 ): Promise<GenerateQrResult> {
   const { merchantId, amount, refNo, channelType } = params;
 
@@ -36,19 +36,26 @@ export async function generateQrForMerchant(
     throw new NotFoundError("Merchant not found");
   }
 
-  // No channelType -> the merchant's default channel (just amount + PIN).
-  // channelType given -> that specific channel (caller already picked a method).
   const channelFilter = channelType
-    ? and(eq(merchantChannels.merchantId, merchantId), eq(merchantChannels.channelType, channelType))
-    : and(eq(merchantChannels.merchantId, merchantId), eq(merchantChannels.isDefault, true));
+    ? and(
+        eq(merchantChannels.merchantId, merchantId),
+        eq(merchantChannels.channelType, channelType),
+      )
+    : and(
+        eq(merchantChannels.merchantId, merchantId),
+        eq(merchantChannels.isDefault, true),
+      );
 
-  const [channel] = await db.select().from(merchantChannels).where(channelFilter);
+  const [channel] = await db
+    .select()
+    .from(merchantChannels)
+    .where(channelFilter);
 
   if (!channel) {
     throw new BadRequestError(
       channelType
         ? `Merchant has no ${channelType} channel configured`
-        : "Merchant has no default channel configured"
+        : "Merchant has no default channel configured",
     );
   }
 
@@ -90,11 +97,11 @@ export async function generateQrForMerchant(
   };
 }
 
-export async function getQrRequestForMerchant(id: string, merchantId: string) {
+export async function getQrById(id: string) {
   const [record] = await db
     .select()
     .from(qrRequests)
-    .where(and(eq(qrRequests.id, id), eq(qrRequests.merchantId, merchantId)));
+    .where(eq(qrRequests.id, id));
 
   if (!record) {
     throw new NotFoundError();
@@ -107,4 +114,17 @@ export async function getQrRequestForMerchant(id: string, merchantId: string) {
     status: record.status,
     paidAt: record.paidAt,
   };
+}
+
+export async function getQrImageById(id: string): Promise<Buffer> {
+  const [record] = await db
+    .select()
+    .from(qrRequests)
+    .where(eq(qrRequests.id, id));
+
+  if (!record || !record.qrImageBase64) {
+    throw new NotFoundError("QR image not found");
+  }
+
+  return Buffer.from(record.qrImageBase64, "base64");
 }
