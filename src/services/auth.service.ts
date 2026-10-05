@@ -9,7 +9,7 @@ import { UnauthorizedError } from "../lib/errors";
 export async function login(
   email: string,
   password: string,
-): Promise<{ token: string }> {
+): Promise<{ adminFirstName: string; token: string }> {
   const [admin] = await db.select().from(admins).where(eq(admins.email, email));
   if (!admin) {
     throw new UnauthorizedError("Invalid email or password");
@@ -28,5 +28,5 @@ export async function login(
     },
   );
 
-  return { token };
+  return { adminFirstName: admin.firstName, token };
 }
