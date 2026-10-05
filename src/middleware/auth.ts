@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env";
+import { ForbiddenError } from "../lib/errors";
 
 export interface AuthPayload {
-  userId: string;
-  merchantId: string;
-  role: "MERCHANT_ADMIN" | "SUPER_ADMIN";
+  adminId: string;
+  role: "MERCHANT" | "SUPER_ADMIN";
 }
 
 declare global {
@@ -32,4 +32,13 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   } catch {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
+}
+
+export function requireRole(...roles: AuthPayload["role"][]) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return next(new ForbiddenError("You don't have permission to do that"));
+    }
+    next();
+  };
 }
