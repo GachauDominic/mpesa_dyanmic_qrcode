@@ -1,14 +1,11 @@
 import { and, eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
 import { db } from "../db/client";
-import { merchants, merchantChannels, users } from "../db/schema";
+import { merchants, merchantChannels } from "../db/schema";
 import { ChannelType } from "../lib/daraja/types";
 import { BadRequestError } from "../lib/errors";
 
 interface CreateMerchantParams {
   businessName: string;
-  adminEmail: string;
-  adminPassword: string;
   channelType: ChannelType;
   cpi: string;
 }
@@ -22,37 +19,22 @@ interface CreateMerchantResult {
   };
 }
 
-interface AddChannelParams {
-  merchantId: string;
-  channelType: ChannelType;
-  cpi: string;
-  isDefault?: boolean;
-}
-
-interface AddChannelResult {
-  id: string;
-  channelType: ChannelType;
-  cpi: string;
-  isDefault: boolean;
-}
-
 export async function createMerchant(
   params: CreateMerchantParams,
 ): Promise<CreateMerchantResult> {
-  const { businessName, adminEmail, adminPassword, channelType, cpi } = params;
+  const { businessName, channelType, cpi } = params;
 
   const [existing] = await db
     .select()
-    .from(users)
-    .where(eq(users.email, adminEmail));
+    .from(merchants)
+    .where(eq(merchants.businessName, businessName));
+
   if (existing) {
-    throw new BadRequestError("Email is already registered to a merchant");
+    throw new BadRequestError(
+      "Business name is already registered to a merchant",
+    );
   }
 
-  const passwordHash = await bcrypt.hash(adminPassword, 10);
-
-  // All three inserts succeed together or not at all — otherwise a failure
-  // partway through could leave a merchant with no user able to log into it.
   return db.transaction(async (tx) => {
     const [merchant] = await tx
       .insert(merchants)
@@ -70,13 +52,6 @@ export async function createMerchant(
       })
       .returning();
 
-    await tx.insert(users).values({
-      email: adminEmail,
-      passwordHash,
-      merchantId: merchant.id,
-      role: "MERCHANT_ADMIN",
-    });
-
     return {
       merchantId: merchant.id,
       businessName: merchant.businessName,
@@ -86,6 +61,20 @@ export async function createMerchant(
       },
     };
   });
+}
+
+interface AddChannelParams {
+  merchantId: string;
+  channelType: ChannelType;
+  cpi: string;
+  isDefault?: boolean;
+}
+
+interface AddChannelResult {
+  id: string;
+  channelType: ChannelType;
+  cpi: string;
+  isDefault: boolean;
 }
 
 export async function addMerchantChannel(
@@ -111,7 +100,6 @@ export async function addMerchantChannel(
 
   return db.transaction(async (tx) => {
     if (isDefault) {
-      // Only one channel should ever be the default — clear the old one first.
       await tx
         .update(merchantChannels)
         .set({ isDefault: false })
