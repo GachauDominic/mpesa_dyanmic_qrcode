@@ -3,41 +3,39 @@
 POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
-{
-  "email": "gachaudominic@gmail.com",
-  "password_hash": "*T89z>O35e=7tm",
-  "role": "SUPER_ADMIN",
-  "first_name": "Dominic",
-  "last_name": "Maina"
-}
+# {
+#   "email": "gachaudominic@gmail.com",
+#   "password_hash": "*T89z>O35e=7tm",
+#   "role": "SUPER_ADMIN",
+#   "first_name": "Dominic",
+#   "last_name": "Maina"
+# }
 
-### login a user
-# @name merchantAdminLogin
+### login an admin
+# @name Login
 POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-  "email":"admin@example.com",
-  "password":"changeme123"
+  "email": "gachaudominic@gmail.com",
+  "password": "*T89z>O35e=7tm",
 }
 
-# {
-#   "email": "gachaudominic@gmail.com",
-#   "password": "*T89z>O35e=7tm",
-# }
-
 ###Extract the merchantAdmin token from login response
-@merchantToken = {{merchantAdminLogin.response.body.token}}
+@token = {{Login.response.body.token}}
 
 ### generate a qr-code with merchantAdmin
 # @name generateQr
 POST http://localhost:3000/api/qr/generate
-Authorization: Bearer {{merchantToken}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
+  "merchantId": ""
+  "channelType": "TILL"
   "amount": 66
 }
+  # "refNo": "",
 
 ###Extract the id from generate qr code response
 @qrId = {{generateQr.response.body.id}}

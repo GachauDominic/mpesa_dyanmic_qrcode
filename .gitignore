@@ -3,6 +3,8 @@ dist/
 .http
 *.tsbuildinfo
 
+seed.ts
+src\db\seed.ts
 .env
 .env.local
 .env.*.local
