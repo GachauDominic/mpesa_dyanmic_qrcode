@@ -82,19 +82,19 @@ export async function addMerchantChannel(
 ): Promise<AddChannelResult> {
   const { merchantId, channelType, cpi, isDefault = false } = params;
 
-  const [existingOfType] = await db
+  const [existingCpi] = await db
     .select()
     .from(merchantChannels)
     .where(
       and(
         eq(merchantChannels.merchantId, merchantId),
-        eq(merchantChannels.channelType, channelType),
+        eq(merchantChannels.cpi, cpi),
       ),
     );
 
-  if (existingOfType) {
+  if (existingCpi) {
     throw new BadRequestError(
-      `Merchant already has a ${channelType} channel configured`,
+      `CPI "${cpi}" is already registered to this merchant`,
     );
   }
 
