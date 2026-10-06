@@ -5,6 +5,13 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const registerAdminSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+  firstName: z.string().min(1).max(50),
+  lastName: z.string().min(1).max(50),
+});
+
 export const generateQrSchema = z.object({
   merchantId: z.string().uuid(),
   amount: z.number().int().positive(),

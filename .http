@@ -1,6 +1,17 @@
 @baseUrl = http://localhost:3000
 @seededMerchantId = d0c1c79f-6717-49ee-be4c-4cf5827a6d68
 
+### register an Admin
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "dom@gmail.com",
+  "password": "z>O35e=7tm",
+  "firstName": "Dom",
+  "lastName": "Maina"
+}
+
 ### Log in as the seeded super admin
 # @name login
 POST {{baseUrl}}/api/auth/login
@@ -64,7 +75,7 @@ Content-Type: application/json
 {
   "merchantId": "{{merchantId}}",
   "channelType": "PAYBILL",
-  "amount": 66
+  "amount": 90
 }
 
 

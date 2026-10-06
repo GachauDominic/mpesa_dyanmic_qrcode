@@ -24,7 +24,8 @@ export async function createMerchantController(
 
     const result = await createMerchant(parsed.data);
     res.status(201).json(result);
-  } catch (err) {
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
     next(err);
   }
 }
