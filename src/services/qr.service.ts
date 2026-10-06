@@ -11,6 +11,7 @@ interface GenerateQrParams {
   amount: number;
   refNo?: string;
   channelType?: ChannelType;
+  channelId?: string;
 }
 
 interface GenerateQrResult {
@@ -22,10 +23,72 @@ interface GenerateQrResult {
   qrCodeDataUri: string;
 }
 
+async function resolveChannel(
+  merchantId: string,
+  channelId?: string,
+  channelType?: ChannelType,
+) {
+  if (channelId) {
+    const [channel] = await db
+      .select()
+      .from(merchantChannels)
+      .where(
+        and(
+          eq(merchantChannels.id, channelId),
+          eq(merchantChannels.merchantId, merchantId),
+        ),
+      );
+
+    if (!channel) {
+      throw new BadRequestError("No matching channel found for this merchant");
+    }
+    return channel;
+  }
+
+  if (channelType) {
+    const matches = await db
+      .select()
+      .from(merchantChannels)
+      .where(
+        and(
+          eq(merchantChannels.merchantId, merchantId),
+          eq(merchantChannels.channelType, channelType),
+        ),
+      );
+
+    if (matches.length === 0) {
+      throw new BadRequestError(
+        `Merchant has no ${channelType} channel configured`,
+      );
+    }
+    if (matches.length > 1) {
+      throw new BadRequestError(
+        `Merchant has multiple ${channelType} channels — pass channelId to pick one`,
+      );
+    }
+    return matches[0];
+  }
+
+  const [defaultChannel] = await db
+    .select()
+    .from(merchantChannels)
+    .where(
+      and(
+        eq(merchantChannels.merchantId, merchantId),
+        eq(merchantChannels.isDefault, true),
+      ),
+    );
+
+  if (!defaultChannel) {
+    throw new BadRequestError("Merchant has no default channel configured");
+  }
+  return defaultChannel;
+}
+
 export async function generateQrForMerchant(
   params: GenerateQrParams,
 ): Promise<GenerateQrResult> {
-  const { merchantId, amount, refNo, channelType } = params;
+  const { merchantId, amount, refNo, channelType, channelId } = params;
 
   const [merchant] = await db
     .select()
@@ -36,28 +99,7 @@ export async function generateQrForMerchant(
     throw new NotFoundError("Merchant not found");
   }
 
-  const channelFilter = channelType
-    ? and(
-        eq(merchantChannels.merchantId, merchantId),
-        eq(merchantChannels.channelType, channelType),
-      )
-    : and(
-        eq(merchantChannels.merchantId, merchantId),
-        eq(merchantChannels.isDefault, true),
-      );
-
-  const [channel] = await db
-    .select()
-    .from(merchantChannels)
-    .where(channelFilter);
-
-  if (!channel) {
-    throw new BadRequestError(
-      channelType
-        ? `Merchant has no ${channelType} channel configured`
-        : "Merchant has no default channel configured",
-    );
-  }
+  const channel = await resolveChannel(merchantId, channelId, channelType);
 
   const finalRefNo = refNo ?? randomUUID().slice(0, 12);
   const trxCode = CHANNEL_TO_TRX_CODE[channel.channelType];
