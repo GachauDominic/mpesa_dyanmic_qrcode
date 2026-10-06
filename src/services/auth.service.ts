@@ -2,9 +2,14 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { eq } from "drizzle-orm";
 import { db } from "../db/client";
-import { admins } from "../db/schema";
+import { admins, TIAdmin } from "../db/schema";
 import { env } from "../config/env";
 import { UnauthorizedError } from "../lib/errors";
+
+export const registerAdminService = async (admin: TIAdmin) => {
+  const newAdmin = await db.insert(admins).values(admin).returning();
+  return newAdmin;
+};
 
 export async function login(
   email: string,

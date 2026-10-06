@@ -1,19 +1,9 @@
+@baseUrl = http://localhost:3000
+@seededMerchantId = d0c1c79f-6717-49ee-be4c-4cf5827a6d68
 
-### register an Admin
-POST http://localhost:3000/api/auth/register
-Content-Type: application/json
-
-# {
-#   "email": "gachaudominic@gmail.com",
-#   "passwordHash": "*T89z>O35e=7tm",
-#   "role": "SUPER_ADMIN",
-#   "firstName ": "Dominic",
-#   "lastName": "Maina"
-# }
-
-### login an admin
-# @name Login
-POST http://localhost:3000/api/auth/login
+### Log in as the seeded super admin
+# @name login
+POST {{baseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
@@ -21,31 +11,38 @@ Content-Type: application/json
   "password": "*T89z>O35e=7tm"
 }
 
-###Extract the Admin token from login response
-@token = {{Login.response.body.token}}
+### Extract the token
+@token = {{login.response.body.token}}
 
-### generate a qr-code with Admin
+
+### Generate a QR using the seeded merchant's default channel
 # @name generateQr
-POST http://localhost:3000/api/qr/generate
+POST {{baseUrl}}/api/qr/generate
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "merchantId": "d0c1c79f-6717-49ee-be4c-4cf5827a6d68",
-  "channelType": "PAYBILL",
+  "merchantId": "13a5a784-9791-4763-a9ae-a68af0409a7a",
   "amount": 50
 }
 
-###Extract the id from generate qr code response
+### Extract the id
 @qrId = {{generateQr.response.body.id}}
 
-### get qr-code
-GET http://localhost:3000/api/qr/{{qrId}}
+
+### Fetch that QR's status
+GET {{baseUrl}}/api/qr/{{qrId}}
 Authorization: Bearer {{token}}
 
-### create a merchant (requires the super admin token)
+
+### View the actual QR image
+GET {{baseUrl}}/api/qr/{{qrId}}/image
+Authorization: Bearer {{token}}
+
+
+### Create a new merchant (requires SUPER_ADMIN)
 # @name createMerchant
-POST http://localhost:3000/api/merchants
+POST {{baseUrl}}/api/merchants
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -55,32 +52,143 @@ Content-Type: application/json
   "cpi": "220220"
 }
 
-### Extract merchant ID from the response
+### Extract the new merchant's id
 @merchantId = {{createMerchant.response.body.merchantId}}
 
-### Add a channel to a merchant
-POST http://localhost:3000/api/merchants/{{merchantId}}/channels
-Content-Type: application/json
 
-{
-  "channelType": "",
-  "cpi": ""
-}
-
-### generate a qr-code with superAdmin
-# @name sp_generateQr
-POST http://localhost:3000/api/qr/generate
+### Generate a QR for the new merchant — exactly one PAYBILL channel so far, unambiguous
+POST {{baseUrl}}/api/qr/generate
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
+  "merchantId": "{{merchantId}}",
+  "channelType": "PAYBILL",
   "amount": 66
 }
 
-###Extract the superAdmin id from generate qr code response
-@superqrId = {{sp_generateQr.response.body.id}}
 
-### get qr-code
-GET http://localhost:3000/api/qr/{{superqrId}}
-Authorization: Bearer {{superToken}}
+### Add a SECOND Paybill channel to that same new merchant
+# @name addSecondChannel
+POST {{baseUrl}}/api/merchants/{{merchantId}}/channels
+Authorization: Bearer {{token}}
+Content-Type: application/json
 
+{
+  "channelType": "PAYBILL",
+  "cpi": "921999"
+}
+
+### Extract the second channel's id
+@secondChannelId = {{addSecondChannel.response.body.id}}
+
+
+### Now channelType alone is ambiguous (2 PAYBILL channels) — expect a 400
+POST {{baseUrl}}/api/qr/generate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "merchantId": "{{merchantId}}",
+  "channelType": "PAYBILL",
+  "amount": 66
+}
+
+
+### Disambiguate with channelId instead — this one succeeds
+POST {{baseUrl}}/api/qr/generate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "merchantId": "{{merchantId}}",
+  "channelId": "{{secondChannelId}}",
+  "amount": 66
+}
+
+
+
+# ### register an Admin
+# POST http://localhost:3000/api/auth/register
+# Content-Type: application/json
+
+# # {
+# #   "email": "gachaudominic@gmail.com",
+# #   "passwordHash": "*T89z>O35e=7tm",
+# #   "role": "SUPER_ADMIN",
+# #   "firstName ": "Dominic",
+# #   "lastName": "Maina"
+# # }
+
+# ### login an admin
+# # @name Login
+# POST http://localhost:3000/api/auth/login
+# Content-Type: application/json
+
+# {
+#   "email": "gachaudominic@gmail.com",
+#   "password": "*T89z>O35e=7tm"
+# }
+
+# ###Extract the Admin token from login response
+# @token = {{Login.response.body.token}}
+
+# ### generate a qr-code with Admin
+# # @name generateQr
+# POST http://localhost:3000/api/qr/generate
+# Authorization: Bearer {{token}}
+# Content-Type: application/json
+
+# {
+#   "merchantId": "d0c1c79f-6717-49ee-be4c-4cf5827a6d68",
+#   "channelType": "PAYBILL",
+#   "amount": 50
+# }
+
+# ###Extract the id from generate qr code response
+# @qrId = {{generateQr.response.body.id}}
+
+# ### get qr-code
+# GET http://localhost:3000/api/qr/{{qrId}}
+# Authorization: Bearer {{token}}
+
+# ### create a merchant (requires the super admin token)
+# # @name createMerchant
+# POST http://localhost:3000/api/merchants
+# Authorization: Bearer {{token}}
+# Content-Type: application/json
+
+# {
+#   "businessName": "AIRTEL Credit",
+#   "channelType": "PAYBILL",
+#   "cpi": "220220"
+# }
+
+# ### Extract merchant ID from the response
+# @merchantId = {{createMerchant.response.body.merchantId}}
+
+# ### Add a channel to a merchant
+# POST http://localhost:3000/api/merchants/{{merchantId}}/channels
+# Content-Type: application/json
+
+# {
+#   "channelType": "",
+#   "cpi": ""
+# }
+
+# ### generate a qr-code with superAdmin
+# # @name sp_generateQr
+# POST http://localhost:3000/api/qr/generate
+# Authorization: Bearer {{token}}
+# Content-Type: application/json
+
+# {
+#   "amount": 66
+# }
+
+# ###Extract the superAdmin id from generate qr code response
+# @superqrId = {{sp_generateQr.response.body.id}}
+
+# ### get qr-code
+# GET http://localhost:3000/api/qr/{{superqrId}}
+# Authorization: Bearer {{superToken}}
