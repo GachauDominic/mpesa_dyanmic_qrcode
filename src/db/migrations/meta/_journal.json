@@ -36,6 +36,13 @@
       "when": 1791238265073,
       "tag": "0004_fancy_lightspeed",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791974612164,
+      "tag": "0005_aspiring_bucky",
+      "breakpoints": true
     }
   ]
 }

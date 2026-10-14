@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ### Extract the token
-@token = {{login.response.body.token}}
+@token = {{login.response.body.result.token}}
 
 
 ### Generate a QR using the seeded merchant's default channel
@@ -33,8 +33,9 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "merchantId": "13a5a784-9791-4763-a9ae-a68af0409a7a",
-  "amount": 50
+  "merchantId": "fefb43c5-bef5-498a-b523-83f852142721",
+  "refNo": "0735782454",
+  "amount": 46
 }
 
 ### Extract the id

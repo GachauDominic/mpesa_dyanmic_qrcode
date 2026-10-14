@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { qrRequests, paymentConfirmations } from "../db/schema";
 
@@ -18,13 +18,24 @@ export function buildValidationResponse() {
 
 export async function recordConfirmation(payload: C2bConfirmationPayload) {
   const refNo = payload.BillRefNumber;
+  const paidAmount = payload.TransAmount
+    ? Math.round(Number(payload.TransAmount))
+    : null;
   let qrRequestId: string | null = null;
 
-  if (refNo) {
+  if (refNo && paidAmount !== null) {
     const [match] = await db
       .select()
       .from(qrRequests)
-      .where(eq(qrRequests.refNo, refNo));
+      .where(
+        and(
+          eq(qrRequests.refNo, refNo),
+          eq(qrRequests.amount, paidAmount),
+          eq(qrRequests.status, "PENDING"),
+        ),
+      )
+      .orderBy(desc(qrRequests.createdAt))
+      .limit(1);
 
     if (match) {
       qrRequestId = match.id;
@@ -38,7 +49,7 @@ export async function recordConfirmation(payload: C2bConfirmationPayload) {
   await db.insert(paymentConfirmations).values({
     qrRequestId,
     mpesaReceiptNumber: payload.TransID,
-    transAmount: payload.TransAmount ? Math.round(Number(payload.TransAmount)) : null,
+    transAmount: paidAmount,
     msisdn: payload.MSISDN,
     rawPayload: payload,
   });
